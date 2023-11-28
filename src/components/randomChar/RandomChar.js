@@ -7,11 +7,6 @@ import Spinner from '../spinner/Spinner';
 import ErrorMessage from '../errorMessage/ErrorMessage';
 
 class RandomChar extends Component {
-  constructor(props) {
-    super(props);
-    this.updateChar();
-  }
-
   state = {
     char: {},
     loading: true,
@@ -19,6 +14,14 @@ class RandomChar extends Component {
   };
 
   marvelService = new MarvelService();
+
+  componentDidMount() {
+    this.updateChar();
+  }
+
+  componentWillUnmount() {
+    clearInterval(this.timerId);
+  }
 
   //Изначально при загруке отображается спиннер, но как только в стейт сетятся новые данные loading становится false и вместо спиннера уже отображается контент
   onCharLoaded = char => {
@@ -46,14 +49,18 @@ class RandomChar extends Component {
         {spinner}
         {content}
         <div className="randomchar__static">
-          <p className="randomchar__title">
-            Random character for today!
-            <br />
-            Do you want to get to know him better?
-          </p>
+          <p className="randomchar__title">Do you want to get to know him better?</p>
           <p className="randomchar__title">Or choose another one</p>
           <button className="button button__main">
-            <div className="inner">try it</div>
+            <div
+              onClick={() => {
+                this.setState({ loading: true });
+                this.updateChar();
+              }}
+              className="inner"
+            >
+              try it
+            </div>
           </button>
           <img src={mjolnir} alt="mjolnir" className="randomchar__decoration" />
         </div>
@@ -64,9 +71,15 @@ class RandomChar extends Component {
 
 const View = ({ char }) => {
   const { name, description, thumbnail, homepage, wiki } = char;
+  const noImage = thumbnail.includes('not_available');
   return (
     <div className="randomchar__block">
-      <img src={thumbnail} alt="Random character" className="randomchar__img" />
+      <img
+        src={thumbnail}
+        style={{ objectFit: `${noImage ? 'fill' : 'cover'}` }}
+        alt="Random character"
+        className="randomchar__img"
+      />
       <div className="randomchar__info">
         <p className="randomchar__name">{name}</p>
         <p className="randomchar__descr">{description ? `${description.slice(0, 160)}...` : 'No description'}</p>
