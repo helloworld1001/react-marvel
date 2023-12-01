@@ -50,6 +50,7 @@ class RandomChar extends Component {
         {content}
         <div className="randomchar__static">
           <p className="randomchar__title">Do you want to get to know him better?</p>
+          <p className="randomchar__title">Do you want to get to know him better?</p>
           <p className="randomchar__title">Or choose another one</p>
           <button className="button button__main">
             <div
@@ -74,6 +75,12 @@ const View = ({ char }) => {
   const noImage = thumbnail.includes('not_available');
   return (
     <div className="randomchar__block">
+      <img
+        src={thumbnail}
+        style={{ objectFit: `${noImage ? 'fill' : 'cover'}` }}
+        alt="Random character"
+        className="randomchar__img"
+      />
       <img
         src={thumbnail}
         style={{ objectFit: `${noImage ? 'fill' : 'cover'}` }}
