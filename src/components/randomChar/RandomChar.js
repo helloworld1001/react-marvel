@@ -28,6 +28,12 @@ class RandomChar extends Component {
     this.setState({ char, loading: false });
   };
 
+  onCharLoading = () => {
+    this.setState({
+      loading: true,
+    });
+  };
+
   onError = () => {
     this.setState({ error: true, loading: false });
   };
@@ -54,7 +60,7 @@ class RandomChar extends Component {
           <button className="button button__main">
             <div
               onClick={() => {
-                this.setState({ loading: true });
+                this.onCharLoading();
                 this.updateChar();
               }}
               className="inner"
