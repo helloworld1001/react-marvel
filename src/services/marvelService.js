@@ -10,6 +10,8 @@ class MarvelService {
       thumbnail: char.thumbnail.path + '.' + char.thumbnail.extension,
       homepage: char.urls[0].url,
       wiki: char.urls[1].url,
+      id: char.id,
+      comics: char.comics.items,
     };
   };
 
@@ -23,8 +25,8 @@ class MarvelService {
   };
 
   //Функция получения группы персонажей
-  getAllCharcters = async () => {
-    const res = await this.getResource(`${this._apiBase}characters?limit=9&offset=210&${this._apiKey}`);
+  getAllCharcters = async offset => {
+    const res = await this.getResource(`${this._apiBase}characters?limit=9&offset=${offset}&${this._apiKey}`);
     return res.data.results.map(this._transformCharacter);
   };
 

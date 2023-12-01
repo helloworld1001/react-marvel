@@ -28,6 +28,12 @@ class RandomChar extends Component {
     this.setState({ char, loading: false });
   };
 
+  onCharLoading = () => {
+    this.setState({
+      loading: true,
+    });
+  };
+
   onError = () => {
     this.setState({ error: true, loading: false });
   };
@@ -55,7 +61,7 @@ class RandomChar extends Component {
           <button className="button button__main">
             <div
               onClick={() => {
-                this.setState({ loading: true });
+                this.onCharLoading();
                 this.updateChar();
               }}
               className="inner"
@@ -75,12 +81,6 @@ const View = ({ char }) => {
   const noImage = thumbnail.includes('not_available');
   return (
     <div className="randomchar__block">
-      <img
-        src={thumbnail}
-        style={{ objectFit: `${noImage ? 'fill' : 'cover'}` }}
-        alt="Random character"
-        className="randomchar__img"
-      />
       <img
         src={thumbnail}
         style={{ objectFit: `${noImage ? 'fill' : 'cover'}` }}
