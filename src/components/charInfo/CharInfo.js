@@ -20,6 +20,7 @@ class CharInfo extends Component {
     this.updateChar();
   }
 
+  //Обновляем данные в компоненте лишь в том случае, если в пропсы пришел действительно новый charId, иначе будет бесконечный цикл
   componentDidUpdate(prevProps, prevState) {
     if (this.props.charId !== prevProps.charId) {
       this.updateChar();

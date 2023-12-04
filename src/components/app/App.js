@@ -17,8 +17,6 @@ class App extends Component {
     this.setState({
       currentCharacter: id,
     });
-
-    console.log(this.state.currentCharacter);
   };
 
   render() {

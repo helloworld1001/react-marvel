@@ -1,5 +1,7 @@
 import './charList.scss';
 import { Component } from 'react';
+import PropTypes from 'prop-types';
+
 import Spinner from '../spinner/Spinner';
 import ErrorMessage from '../errorMessage/ErrorMessage';
 import MarvelService from '../../services/marvelService';
@@ -17,20 +19,41 @@ class CharList extends Component {
   };
 
   componentDidMount() {
-    this.updateCharList(this.state.offset);
+    const storageCharacters = JSON.parse(localStorage.getItem('characters'));
+    const storageOffset = Number(localStorage.getItem('offset'));
+    if (storageCharacters) {
+      this.setState({
+        characters: storageCharacters,
+        offset: storageOffset,
+        loading: false,
+      });
+    } else {
+      this.updateCharList(this.state.offset);
+    }
+    window.addEventListener('scroll', this.addCharsByScroll);
+  }
+
+  componentDidUpdate() {}
+
+  componentWillUnmount() {
+    window.removeEventListener('scroll', this.addCharsByScroll);
   }
 
   updateCharList = async offset => {
     this.setState({ newItemLoading: true });
     try {
       const newCharacters = await this.marvelService.getAllCharcters(offset);
-      let ended = false;
       //Проверяем, если больше нечего загружать, то скрываем кнопку load more
+      let ended = false;
       if (newCharacters.length < 9) {
         ended = true;
       }
-      this.setState(({ characters, offset }) => ({
-        characters: [...characters, ...newCharacters],
+      const newData = [...this.state.characters, ...newCharacters];
+
+      localStorage.setItem('offset', JSON.stringify(this.state.offset + 9));
+      localStorage.setItem('characters', JSON.stringify(newData));
+      this.setState(({ offset }) => ({
+        characters: newData,
         loading: false,
         newItemLoading: false,
         offset: offset + 9,
@@ -42,6 +65,16 @@ class CharList extends Component {
         loading: false,
         newItemLoading: false,
       });
+    }
+  };
+
+  addCharsByScroll = e => {
+    if (this.state.newItemLoading) {
+      return;
+    }
+
+    if (e.target.documentElement.scrollHeight - (e.target.documentElement.scrollTop + window.innerHeight) < 100) {
+      this.updateCharList(this.state.offset);
     }
   };
 
@@ -83,5 +116,9 @@ class CharList extends Component {
     );
   }
 }
+
+CharList.propTypes = {
+  onCurrentCharacter: PropTypes.func.isRequired,
+};
 
 export default CharList;

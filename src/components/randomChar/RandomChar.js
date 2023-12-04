@@ -13,14 +13,11 @@ class RandomChar extends Component {
     error: false,
   };
 
+  //Вызываем конструктор API чтобы можно было совершать сетевые запросы обращаясь к экземпляру класса MarvelService
   marvelService = new MarvelService();
 
   componentDidMount() {
     this.updateChar();
-  }
-
-  componentWillUnmount() {
-    clearInterval(this.timerId);
   }
 
   //Изначально при загруке отображается спиннер, но как только в стейт сетятся новые данные loading становится false и вместо спиннера уже отображается контент
@@ -28,18 +25,22 @@ class RandomChar extends Component {
     this.setState({ char, loading: false });
   };
 
+  //Функция которая по клику на кнопку получения рандомного персонажа изменяет loading на true и тем самым заставляет рендериться спиннер
   onCharLoading = () => {
     this.setState({
       loading: true,
     });
   };
 
+  //Функция, при срабатывании которой, рендерится компонент ошибки
   onError = () => {
     this.setState({ error: true, loading: false });
   };
 
+  //Функция обновления рандомного персонажа
   updateChar = () => {
     const id = Math.floor(Math.random() * (1011400 - 1011000) + 1011000);
+    //Получаем рандомного персонажа по случайному id, передаем объект этого персонажа в then, там срабатывает onCharLoaded, которая сетит этого персонажа в стейт и убирает spinner. В случае ошибки срабатывает onError()
     this.marvelService.getCharacter(id).then(this.onCharLoaded).catch(this.onError);
   };
 
@@ -55,7 +56,6 @@ class RandomChar extends Component {
         {spinner}
         {content}
         <div className="randomchar__static">
-          <p className="randomchar__title">Do you want to get to know him better?</p>
           <p className="randomchar__title">Do you want to get to know him better?</p>
           <p className="randomchar__title">Or choose another one</p>
           <button className="button button__main">
@@ -76,6 +76,7 @@ class RandomChar extends Component {
   }
 }
 
+//Разделяем логику, чтобы главный компонент RandomChar отвечал только за логику, что конкретно будет отображаться - ошибка, спиннер или View. View отвечает за отображение конкретного char;
 const View = ({ char }) => {
   const { name, description, thumbnail, homepage, wiki } = char;
   const noImage = thumbnail.includes('not_available');
