@@ -78,6 +78,20 @@ class CharList extends Component {
     }
   };
 
+  itemRefs = [];
+
+  setInputRef = ref => {
+    this.itemRefs = [...this.itemRefs, ref];
+  };
+
+  focusOnItem = i => {
+    this.itemRefs.forEach(elem => {
+      elem.classList.remove('char__item_selected');
+    });
+    this.itemRefs[i].classList.add('char__item_selected');
+    this.itemRefs[i].focus();
+  };
+
   render() {
     const { characters, error, offset, loading, newItemLoading, charEnded } = this.state;
     const { onCurrentCharacter } = this.props;
@@ -93,8 +107,23 @@ class CharList extends Component {
     return (
       <div className="char__list">
         <ul className="char__grid">
-          {characters.map(item => (
-            <li key={item.id} onClick={() => onCurrentCharacter(item.id)} className="char__item">
+          {characters.map((item, i) => (
+            <li
+              ref={this.setInputRef}
+              tabIndex={0}
+              key={item.id}
+              onClick={() => {
+                onCurrentCharacter(item.id);
+                this.focusOnItem(i);
+              }}
+              onKeyDown={e => {
+                if (e.key === ' ' || e.key === 'Enter') {
+                  onCurrentCharacter(item.id);
+                  this.focusOnItem(i);
+                }
+              }}
+              className="char__item"
+            >
               <img
                 src={item.thumbnail}
                 alt="charImg"
