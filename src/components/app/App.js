@@ -10,7 +10,7 @@ import decoration from '../../resources/img/vision.png';
 
 class App extends Component {
   state = {
-    currentCharacter: null,
+    currentCharacter: 1011000,
   };
 
   onCurrentCharacter = id => {
