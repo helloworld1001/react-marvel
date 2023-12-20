@@ -1,151 +1,148 @@
 import './charList.scss';
-import { Component } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 
 import Spinner from '../spinner/Spinner';
 import ErrorMessage from '../errorMessage/ErrorMessage';
 import MarvelService from '../../services/marvelService';
 
-class CharList extends Component {
-  marvelService = new MarvelService();
+const CharList = ({ onCurrentCharacter }) => {
+  const [firstRender, setFirtstRender] = useState(true);
+  const [characters, setCharacters] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [newItemsLoading, setNewItemsLoading] = useState(true);
+  const [offset, setOffset] = useState(210);
+  const [charEnded, setCharEnded] = useState(false);
 
-  state = {
-    characters: [],
-    loading: true,
-    error: false,
-    newItemLoading: false,
-    offset: 210,
-    charEnded: false,
-  };
+  const marvelService = new MarvelService();
 
-  componentDidMount() {
+  // 1) Я создал два разных эффекта. Один навешивает обработчик события, другой делает запросы и зависит от параметра newItemsLoading
+
+  // 2) Обработчик события я вынес ниже и единственное, что он делает, это то, что при долистывании до конца страницы переключает состояние newItemsLoading в true
+
+  // 3) раз состояние изменилось, то сработает второй useEffect. Тут сначала мы проверяем, что это состояние правдивое. Сделано это для того, чтобы не заходить в бесконечный цикл.
+
+  // 4) Запускается запрос на сервер, который в блоке finally меняет состояние на false, а значит из-за условия не будет образовываться бесконечный цикл.
+
+  // 5) Данные подгрузились, отобразились. И теперь, только когда долистаем до конца, то будет повторный цикл действий.
+
+  useEffect(() => {
     const storageCharacters = JSON.parse(localStorage.getItem('characters'));
     const storageOffset = Number(localStorage.getItem('offset'));
+
     if (storageCharacters) {
-      this.setState({
-        characters: storageCharacters,
-        offset: storageOffset,
-        loading: false,
-      });
+      setCharacters(storageCharacters);
+      setOffset(storageOffset);
+      setLoading(false);
     } else {
-      this.updateCharList(this.state.offset);
+      updateCharList(offset);
     }
-    window.addEventListener('scroll', this.addCharsByScroll);
-  }
 
-  componentDidUpdate() {}
+    setNewItemsLoading(false);
+    window.addEventListener('scroll', addCharsByScroll);
 
-  componentWillUnmount() {
-    window.removeEventListener('scroll', this.addCharsByScroll);
-  }
+    return () => {
+      window.removeEventListener('scroll', addCharsByScroll);
+    };
+  }, []);
 
-  updateCharList = async offset => {
-    this.setState({ newItemLoading: true });
+  useEffect(() => {
+    if (newItemsLoading && !charEnded && !firstRender) {
+      updateCharList(offset);
+    }
+    setFirtstRender(false);
+  }, [newItemsLoading]);
+
+  const updateCharList = async offset => {
     try {
-      const newCharacters = await this.marvelService.getAllCharcters(offset);
+      const newCharacters = await marvelService.getAllCharcters(offset);
       //Проверяем, если больше нечего загружать, то скрываем кнопку load more
       let ended = false;
       if (newCharacters.length < 9) {
         ended = true;
       }
-      const newData = [...this.state.characters, ...newCharacters];
 
-      localStorage.setItem('offset', JSON.stringify(this.state.offset + 9));
-      localStorage.setItem('characters', JSON.stringify(newData));
-      this.setState(({ offset }) => ({
-        characters: newData,
-        loading: false,
-        newItemLoading: false,
-        offset: offset + 9,
-        charEnded: ended,
-      }));
+      localStorage.setItem('offset', JSON.stringify(offset + 9));
+      localStorage.setItem('characters', JSON.stringify([...characters, ...newCharacters]));
+
+      setCharacters(characters => [...characters, ...newCharacters]);
+      setLoading(false);
+      setOffset(offset => offset + 9);
+      setCharEnded(ended);
     } catch (error) {
-      this.setState({
-        error: true,
-        loading: false,
-        newItemLoading: false,
-      });
+      setError(true);
+      setLoading(false);
+    } finally {
+      setNewItemsLoading(false);
     }
   };
 
-  addCharsByScroll = e => {
-    if (this.state.newItemLoading) {
-      return;
-    }
-
+  const addCharsByScroll = e => {
     if (e.target.documentElement.scrollHeight - (e.target.documentElement.scrollTop + window.innerHeight) < 100) {
-      this.updateCharList(this.state.offset);
+      setNewItemsLoading(true);
     }
   };
 
-  itemRefs = [];
+  const itemRefs = useRef([]);
 
-  setInputRef = ref => {
-    this.itemRefs = [...this.itemRefs, ref];
-  };
-
-  focusOnItem = i => {
-    this.itemRefs.forEach(elem => {
+  const focusOnItem = i => {
+    itemRefs.current.forEach(elem => {
       elem.classList.remove('char__item_selected');
     });
-    this.itemRefs[i].classList.add('char__item_selected');
-    this.itemRefs[i].focus();
+    itemRefs.current[i].classList.add('char__item_selected');
+    itemRefs.current[i].focus();
   };
 
-  render() {
-    const { characters, error, offset, loading, newItemLoading, charEnded } = this.state;
-    const { onCurrentCharacter } = this.props;
-
-    if (loading) {
-      return <Spinner />;
-    }
-
-    if (error) {
-      return <ErrorMessage />;
-    }
-
-    return (
-      <div className="char__list">
-        <ul className="char__grid">
-          {characters.map((item, i) => (
-            <li
-              ref={this.setInputRef}
-              tabIndex={0}
-              key={item.id}
-              onClick={() => {
-                onCurrentCharacter(item.id);
-                this.focusOnItem(i);
-              }}
-              onKeyDown={e => {
-                if (e.key === ' ' || e.key === 'Enter') {
-                  e.preventDefault();
-                  onCurrentCharacter(item.id);
-                  this.focusOnItem(i);
-                }
-              }}
-              className="char__item"
-            >
-              <img
-                src={item.thumbnail}
-                alt="charImg"
-                style={{ objectFit: `${item.thumbnail.includes('not_available') ? 'fill' : 'cover'}` }}
-              />
-              <div className="char__name">{item.name}</div>
-            </li>
-          ))}
-        </ul>
-        <button
-          className="button button__main button__long"
-          disabled={newItemLoading}
-          style={{ display: charEnded ? 'none' : 'block' }}
-          onClick={() => this.updateCharList(offset)}
-        >
-          <div className="inner">load more</div>
-        </button>
-      </div>
-    );
+  if (loading) {
+    return <Spinner />;
   }
-}
+
+  if (error) {
+    return <ErrorMessage />;
+  }
+
+  return (
+    <div className="char__list">
+      <ul className="char__grid">
+        {characters.map((item, i) => (
+          <li
+            ref={el => (itemRefs.current[i] = el)}
+            tabIndex={0}
+            key={item.id}
+            onClick={() => {
+              onCurrentCharacter(item.id);
+              focusOnItem(i);
+            }}
+            onKeyDown={e => {
+              if (e.key === ' ' || e.key === 'Enter') {
+                e.preventDefault();
+                onCurrentCharacter(item.id);
+                focusOnItem(i);
+              }
+            }}
+            className="char__item"
+          >
+            <img
+              src={item.thumbnail}
+              alt="charImg"
+              style={{ objectFit: `${item.thumbnail.includes('not_available') ? 'fill' : 'cover'}` }}
+            />
+            <div className="char__name">{item.name}</div>
+          </li>
+        ))}
+      </ul>
+      <button
+        className="button button__main button__long"
+        disabled={newItemsLoading}
+        style={{ display: charEnded ? 'none' : 'block' }}
+        onClick={() => updateCharList(offset)}
+      >
+        <div className="inner">load more</div>
+      </button>
+    </div>
+  );
+};
 
 CharList.propTypes = {
   onCurrentCharacter: PropTypes.func.isRequired,
