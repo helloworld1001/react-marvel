@@ -1,9 +1,25 @@
-class MarvelService {
-  _apiBase = 'https://gateway.marvel.com:443/v1/public/';
-  _apiKey = 'apikey=502f067c165a2fece5b435a02b066416';
+import { useHttp } from '../hooks/http.hook';
+
+const useMarvelService = () => {
+  const { loading, request, error, clearError } = useHttp();
+
+  const _apiBase = 'https://gateway.marvel.com:443/v1/public/';
+  const _apiKey = 'apikey=502f067c165a2fece5b435a02b066416';
+
+  //Функция получения группы персонажей
+  const getAllCharacters = async offset => {
+    const res = await request(`${_apiBase}characters?limit=9&offset=${offset}&${_apiKey}`);
+    return res.data.results.map(_transformCharacter);
+  };
+
+  //Функция получения одного персонажа
+  const getCharacter = async id => {
+    const res = await request(`${_apiBase}characters/${id}?${_apiKey}`);
+    return _transformCharacter(res.data.results[0]);
+  };
 
   //Функция-преобразователь. Принимает объект с персонажем и трансформитрует в другой с только необходимыми данными
-  _transformCharacter = char => {
+  const _transformCharacter = char => {
     return {
       name: char.name,
       description: char.description,
@@ -15,26 +31,7 @@ class MarvelService {
     };
   };
 
-  //Универсальная функция которая осуществляет fetch-запрос
-  getResource = async url => {
-    const res = await fetch(url);
-    if (!res.ok) {
-      throw new Error(`Could not fetch ${url}, status: ${res.status}`);
-    }
-    return await res.json();
-  };
+  return { loading, error, getAllCharacters, getCharacter, clearError };
+};
 
-  //Функция получения группы персонажей
-  getAllCharcters = async offset => {
-    const res = await this.getResource(`${this._apiBase}characters?limit=9&offset=${offset}&${this._apiKey}`);
-    return res.data.results.map(this._transformCharacter);
-  };
-
-  //Функция получения одного персонажа
-  getCharacter = async id => {
-    const res = await this.getResource(`${this._apiBase}characters/${id}?${this._apiKey}`);
-    return this._transformCharacter(res.data.results[0]);
-  };
-}
-
-export default MarvelService;
+export default useMarvelService;

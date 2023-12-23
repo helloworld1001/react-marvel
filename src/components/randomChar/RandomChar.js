@@ -2,17 +2,13 @@ import { useEffect, useState } from 'react';
 
 import './randomChar.scss';
 import mjolnir from '../../resources/img/mjolnir.png';
-import MarvelService from '../../services/marvelService';
+import useMarvelService from '../../services/marvelService';
 import Spinner from '../spinner/Spinner';
 import ErrorMessage from '../errorMessage/ErrorMessage';
 
 const RandomChar = () => {
   const [char, setChar] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
-
-  //Вызываем конструктор API чтобы можно было совершать сетевые запросы обращаясь к экземпляру класса MarvelService
-  const marvelService = new MarvelService();
+  const { loading, error, getCharacter, clearError } = useMarvelService();
 
   useEffect(() => {
     updateChar();
@@ -21,31 +17,19 @@ const RandomChar = () => {
   //Изначально при загруке отображается спиннер, но как только в стейт сетятся новые данные loading становится false и вместо спиннера уже отображается контент
   const onCharLoaded = char => {
     setChar(char);
-    setLoading(false);
-  };
-
-  //Функция которая по клику на кнопку получения рандомного персонажа изменяет loading на true и тем самым заставляет рендериться спиннер
-  const onCharLoading = () => {
-    setLoading(true);
-  };
-
-  //Функция, при срабатывании которой, рендерится компонент ошибки
-  const onError = () => {
-    setError(true);
-    setLoading(false);
   };
 
   //Функция обновления рандомного персонажа
   const updateChar = () => {
+    clearError();
     const id = Math.floor(Math.random() * (1011400 - 1011000) + 1011000);
     //Получаем рандомного персонажа по случайному id, передаем объект этого персонажа в then, там срабатывает onCharLoaded, которая сетит этого персонажа в стейт и убирает spinner. В случае ошибки срабатывает onError()
-    marvelService.getCharacter(id).then(onCharLoaded).catch(onError);
+    getCharacter(id).then(onCharLoaded);
   };
 
   const errorMessage = error ? <ErrorMessage /> : null;
   const spinner = loading ? <Spinner /> : null;
-  const content = !(error || loading) ? <View char={char} /> : null;
-
+  const content = !error && !loading && char ? <View char={char} /> : null;
   return (
     <div className="randomchar">
       {errorMessage}
@@ -57,7 +41,6 @@ const RandomChar = () => {
         <button className="button button__main">
           <div
             onClick={() => {
-              onCharLoading();
               updateChar();
             }}
             className="inner"

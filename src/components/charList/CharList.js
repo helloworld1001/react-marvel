@@ -4,18 +4,16 @@ import PropTypes from 'prop-types';
 
 import Spinner from '../spinner/Spinner';
 import ErrorMessage from '../errorMessage/ErrorMessage';
-import MarvelService from '../../services/marvelService';
+import useMarvelService from '../../services/marvelService';
 
 const CharList = ({ onCurrentCharacter }) => {
   const [firstRender, setFirtstRender] = useState(true);
   const [characters, setCharacters] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
   const [newItemsLoading, setNewItemsLoading] = useState(true);
   const [offset, setOffset] = useState(210);
   const [charEnded, setCharEnded] = useState(false);
 
-  const marvelService = new MarvelService();
+  const { loading, error, getAllCharacters } = useMarvelService();
 
   // 1) Я создал два разных эффекта. Один навешивает обработчик события, другой делает запросы и зависит от параметра newItemsLoading
 
@@ -34,7 +32,6 @@ const CharList = ({ onCurrentCharacter }) => {
     if (storageCharacters) {
       setCharacters(storageCharacters);
       setOffset(storageOffset);
-      setLoading(false);
     } else {
       updateCharList(offset);
     }
@@ -54,28 +51,24 @@ const CharList = ({ onCurrentCharacter }) => {
     setFirtstRender(false);
   }, [newItemsLoading]);
 
-  const updateCharList = async offset => {
-    try {
-      const newCharacters = await marvelService.getAllCharcters(offset);
-      //Проверяем, если больше нечего загружать, то скрываем кнопку load more
-      let ended = false;
-      if (newCharacters.length < 9) {
-        ended = true;
-      }
+  const updateCharList = offset => {
+    getAllCharacters(offset).then(onCharListLoaded);
+  };
 
-      localStorage.setItem('offset', JSON.stringify(offset + 9));
-      localStorage.setItem('characters', JSON.stringify([...characters, ...newCharacters]));
-
-      setCharacters(characters => [...characters, ...newCharacters]);
-      setLoading(false);
-      setOffset(offset => offset + 9);
-      setCharEnded(ended);
-    } catch (error) {
-      setError(true);
-      setLoading(false);
-    } finally {
-      setNewItemsLoading(false);
+  const onCharListLoaded = newCharacters => {
+    //Проверяем, если больше нечего загружать, то скрываем кнопку load more
+    let ended = false;
+    if (newCharacters.length < 9) {
+      ended = true;
     }
+
+    localStorage.setItem('offset', JSON.stringify(offset + 9));
+    localStorage.setItem('characters', JSON.stringify([...characters, ...newCharacters]));
+
+    setCharacters(characters => [...characters, ...newCharacters]);
+    setNewItemsLoading(false);
+    setOffset(offset => offset + 9);
+    setCharEnded(ended);
   };
 
   const addCharsByScroll = e => {
@@ -94,14 +87,13 @@ const CharList = ({ onCurrentCharacter }) => {
     itemRefs.current[i].focus();
   };
 
-  if (loading) {
-    return <Spinner />;
-  }
-
   if (error) {
     return <ErrorMessage />;
   }
 
+  if (firstRender) {
+    return <Spinner />;
+  }
   return (
     <div className="char__list">
       <ul className="char__grid">
