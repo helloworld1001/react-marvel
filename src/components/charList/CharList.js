@@ -13,7 +13,7 @@ const CharList = ({ onCurrentCharacter }) => {
   const [offset, setOffset] = useState(210);
   const [charEnded, setCharEnded] = useState(false);
 
-  const { loading, error, getAllCharacters } = useMarvelService();
+  const { error, getAllCharacters } = useMarvelService();
 
   // 1) Я создал два разных эффекта. Один навешивает обработчик события, другой делает запросы и зависит от параметра newItemsLoading
 
@@ -47,8 +47,9 @@ const CharList = ({ onCurrentCharacter }) => {
   useEffect(() => {
     if (newItemsLoading && !charEnded && !firstRender) {
       updateCharList(offset);
+    } else {
+      setFirtstRender(false);
     }
-    setFirtstRender(false);
   }, [newItemsLoading]);
 
   const updateCharList = offset => {
@@ -94,6 +95,7 @@ const CharList = ({ onCurrentCharacter }) => {
   if (firstRender) {
     return <Spinner />;
   }
+
   return (
     <div className="char__list">
       <ul className="char__grid">
