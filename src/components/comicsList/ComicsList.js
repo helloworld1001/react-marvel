@@ -1,5 +1,6 @@
 import './comicsList.scss';
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import useMarvelService from '../../services/marvelService';
 import Spinner from '../spinner/Spinner';
 
@@ -19,6 +20,7 @@ const ComicsList = () => {
   };
 
   const onComicsListLoaded = newComics => {
+    console.log(newComics);
     setComics(comics => [...comics, ...newComics]);
     setOffset(offset => offset + 8);
   };
@@ -32,11 +34,11 @@ const ComicsList = () => {
       <ul className="comics__grid">
         {comics.map((comic, i) => (
           <li className="comics__item" key={i}>
-            <a href="#">
+            <Link to={`/comics/${comic.id}`}>
               <img src={comic.thumbnail} alt="ultimate war" className="comics__item-img" />
               <div className="comics__item-name">{comic.title}</div>
               <div className="comics__item-price">{comic.price} $</div>
-            </a>
+            </Link>
           </li>
         ))}
       </ul>

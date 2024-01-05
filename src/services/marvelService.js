@@ -23,6 +23,11 @@ const useMarvelService = () => {
     return res.data.results.map(_transformComic);
   };
 
+  const getComic = async id => {
+    const res = await request(`${_apiBase}comics/${id}?${_apiKey}`);
+    return _transformComic(res.data.results[0]);
+  };
+
   //Функция-преобразователь. Принимает объект с персонажем и трансформитрует в другой с только необходимыми данными
   const _transformCharacter = char => {
     return {
@@ -38,13 +43,17 @@ const useMarvelService = () => {
 
   const _transformComic = comic => {
     return {
+      id: comic.id,
       title: comic.title,
       price: comic.prices[0].price,
       thumbnail: comic.thumbnail.path + '.' + comic.thumbnail.extension,
+      description: comic.description || 'There is no description',
+      language: comic.textObjexts?.language || 'en-us',
+      pageCount: comic.pageCount ? `${comic.pageCount} p.` : 'No information about the number of pages',
     };
   };
 
-  return { loading, error, getAllCharacters, getCharacter, clearError, getAllComics };
+  return { loading, error, getAllCharacters, getCharacter, clearError, getAllComics, getComic };
 };
 
 export default useMarvelService;
