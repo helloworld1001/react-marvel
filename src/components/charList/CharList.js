@@ -1,6 +1,7 @@
 import './charList.scss';
 import { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
+import { CSSTransition, TransitionGroup } from 'react-transition-group';
 
 import Spinner from '../spinner/Spinner';
 import ErrorMessage from '../errorMessage/ErrorMessage';
@@ -99,32 +100,35 @@ const CharList = ({ onCurrentCharacter }) => {
   return (
     <div className="char__list">
       <ul className="char__grid">
-        {characters.map((item, i) => (
-          <li
-            ref={el => (itemRefs.current[i] = el)}
-            tabIndex={0}
-            key={item.id}
-            onClick={() => {
-              onCurrentCharacter(item.id);
-              focusOnItem(i);
-            }}
-            onKeyDown={e => {
-              if (e.key === ' ' || e.key === 'Enter') {
-                e.preventDefault();
-                onCurrentCharacter(item.id);
-                focusOnItem(i);
-              }
-            }}
-            className="char__item"
-          >
-            <img
-              src={item.thumbnail}
-              alt="charImg"
-              style={{ objectFit: `${item.thumbnail.includes('not_available') ? 'fill' : 'cover'}` }}
-            />
-            <div className="char__name">{item.name}</div>
-          </li>
-        ))}
+        <TransitionGroup component={null}>
+          {characters.map((item, i) => (
+            <CSSTransition key={item.id} timeout={500} classNames="char__item">
+              <li
+                ref={el => (itemRefs.current[i] = el)}
+                tabIndex={0}
+                onClick={() => {
+                  onCurrentCharacter(item.id);
+                  focusOnItem(i);
+                }}
+                onKeyDown={e => {
+                  if (e.key === ' ' || e.key === 'Enter') {
+                    e.preventDefault();
+                    onCurrentCharacter(item.id);
+                    focusOnItem(i);
+                  }
+                }}
+                className="char__item"
+              >
+                <img
+                  src={item.thumbnail}
+                  alt="charImg"
+                  style={{ objectFit: `${item.thumbnail.includes('not_available') ? 'fill' : 'cover'}` }}
+                />
+                <div className="char__name">{item.name}</div>
+              </li>
+            </CSSTransition>
+          ))}
+        </TransitionGroup>
       </ul>
       <button
         className="button button__main button__long"

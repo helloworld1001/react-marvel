@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import useMarvelService from '../../services/marvelService';
 import Spinner from '../spinner/Spinner';
 import ErrorMessage from '../errorMessage/ErrorMessage';
-import Skeleton from '../skeleton/Skeleton';
 
 import './singleComicPage.scss';
 import AppBanner from '../appBanner/AppBanner';
